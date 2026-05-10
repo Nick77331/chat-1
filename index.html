@@ -23,7 +23,6 @@
     border-radius: 4px;
     background-color: #000;
     color: #0ff;
-    outline: none;
   }
 
   button {
@@ -95,7 +94,6 @@
     border-radius: 4px;
     background-color: #000;
     color: #0ff;
-    outline: none;
   }
 </style>
 </head>
@@ -143,7 +141,7 @@
   let friends = [];
   let currentFriend = '';
 
-  // Load name from local storage if available
+  // Load name and friends from local storage
   window.onload = () => {
     const savedName = localStorage.getItem('userName');
     if (savedName) {
@@ -154,17 +152,14 @@
     loadFriends();
   };
 
-  // Save name
   nameInput.addEventListener('change', () => {
     userName = nameInput.value.trim();
     userNameSpan.textContent = userName;
     localStorage.setItem('userName', userName);
   });
 
-  // Load friends from local storage
   function loadFriends() {
-    const storedFriends = JSON.parse(localStorage.getItem('friends')) || [];
-    friends = storedFriends;
+    friends = JSON.parse(localStorage.getItem('friends')) || [];
     renderFriends();
   }
 
@@ -184,15 +179,15 @@
 
   function addFriend() {
     const friendName = friendInput.value.trim();
-    if (friendName && !friends.includes(friendName)) {
+    if (friendName && !friends.includes(friendName) && friendName !== userName) {
       friends.push(friendName);
       saveFriends();
       renderFriends();
       friendInput.value = '';
-    } else if (friends.includes(friendName)) {
+    } else if (friends.includes(friendName)){
       alert('This friend is already added.');
     } else {
-      alert('Please enter a friend\'s name.');
+      alert('Please enter a valid friend name.');
     }
   }
 
@@ -200,23 +195,54 @@
     currentFriend = friend;
     document.getElementById('currentFriend').textContent = friend;
     chatSection.style.display = 'block';
+    loadChat();
+  }
+
+  function loadChat() {
+    // Load previous messages with this friend
+    const chatKey = chatKeyForFriend(currentFriend);
+    const chatHistory = JSON.parse(localStorage.getItem(chatKey)) || [];
     messagesDiv.innerHTML = '';
+    chatHistory.forEach(msg => {
+      addMessageToChat(msg.sender, msg.text);
+    });
+  }
+
+  function chatKeyForFriend(friend) {
+    // Create a unique key for chat history between user and friend
+    const names = [userName, friend].sort();
+    return `chat_${names[0]}_${names[1]}`;
   }
 
   function sendMessage() {
     const msg = messageInput.value.trim();
     if (msg && currentFriend) {
-      const msgDiv = document.createElement('div');
-      msgDiv.innerHTML = `<strong>${userName}:</strong> ${msg}`;
-      messagesDiv.appendChild(msgDiv);
+      // Save message to local storage
+      const chatKey = chatKeyForFriend(currentFriend);
+      const chatHistory = JSON.parse(localStorage.getItem(chatKey)) || [];
+      const message = { sender: userName, text: msg };
+      chatHistory.push(message);
+      localStorage.setItem(chatKey, JSON.stringify(chatHistory));
+      addMessageToChat(userName, msg);
       messageInput.value = '';
-      // For demo: auto-reply from friend
+
+      // Simulate reply from friend
       setTimeout(() => {
-        const replyDiv = document.createElement('div');
-        replyDiv.innerHTML = `<strong>${currentFriend}:</strong> Got your message!`;
-        messagesDiv.appendChild(replyDiv);
+        const replyMsg = `Reply from ${currentFriend}`;
+        const reply = { sender: currentFriend, text: replyMsg };
+        chatHistory.push(reply);
+        localStorage.setItem(chatKey, JSON.stringify(chatHistory));
+        addMessageToChat(currentFriend, replyMsg);
       }, 1000);
     }
+  }
+
+  function addMessageToChat(sender, text) {
+    const msgDiv = document.createElement('div');
+    msgDiv.innerHTML = `<strong>${sender}:</strong> ${text}`;
+    messagesDiv.appendChild(msgDiv);
+    // Scroll to bottom
+    document.getElementById('chatContainer').scrollTop = document.getElementById('chatContainer').scrollHeight;
   }
 </script>
 </body>
