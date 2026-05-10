@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Football Chat with Usernames</title>
+<title>Football Chat with Sign Up / Log In</title>
 <!-- Firebase SDKs -->
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
@@ -82,9 +82,9 @@ body {
 
 <div class="header">🏈 Welcome to the Chat! 🏈</div>
 
-<!-- Sign Up / Login -->
+<!-- Sign Up / Log In -->
 <div id="authDiv">
-  <h3>Sign Up / Login</h3>
+  <h3>Sign Up / Log In</h3>
   <p><em>You can create a new account or log into an existing one.</em></p>
   <p>For new users: Enter email, password, and choose a username to sign up.</p>
   <p>For returning users: Enter your email and password to log in.</p>
@@ -119,7 +119,7 @@ body {
 </div>
 
 <script>
-  // Your Firebase config (replace with your own)
+  // Replace with your Firebase project config
   const firebaseConfig = {
     apiKey: "YOUR_API_KEY",
     authDomain: "YOUR_AUTH_DOMAIN",
@@ -129,6 +129,7 @@ body {
     messagingSenderId: "YOUR_SENDER_ID",
     appId: "YOUR_APP_ID"
   };
+
   firebase.initializeApp(firebaseConfig);
   const auth = firebase.auth();
   const db = firebase.database();
@@ -136,21 +137,20 @@ body {
   let currentUser = null;
   let currentUserUid = null;
 
-  // Sign Up
+  // Sign Up for a new account
   function signUp() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
     const username = document.getElementById('username').value.trim();
     if (!email || !password || !username) {
-      alert("Please fill all fields");
+      alert("Please fill all fields for sign up");
       return;
     }
-
     auth.createUserWithEmailAndPassword(email, password)
       .then(userCredential => {
         currentUser = userCredential.user;
         currentUserUid = currentUser.uid;
-        // Save username in user profile
+        // Save user info in database
         db.ref('users/' + currentUserUid).set({
           email: email,
           username: username,
@@ -163,12 +163,12 @@ body {
       });
   }
 
-  // Log in with existing account
+  // Log In for an existing account
   function signIn() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
     if (!email || !password) {
-      alert("Enter email and password");
+      alert("Enter your email and password");
       return;
     }
     auth.signInWithEmailAndPassword(email, password)
@@ -183,7 +183,7 @@ body {
       });
   }
 
-  // Load user profile info
+  // Load user profile info after login
   function loadUserProfile() {
     db.ref('users/' + currentUserUid).once('value').then(snapshot => {
       const data = snapshot.val();
@@ -195,14 +195,13 @@ body {
     });
   }
 
-  // Show chat interface
+  // Show chat UI
   function showChat() {
     document.getElementById('authDiv').style.display = 'none';
     document.getElementById('chatDiv').style.display = 'block';
-    loadUserProfile();
   }
 
-  // Add friend by username
+  // Add a friend by username
   function addFriend() {
     const friendUsername = document.getElementById('friendUsername').value.trim();
     if (!friendUsername) return;
@@ -210,7 +209,7 @@ body {
     db.ref('users').orderByChild('username').equalTo(friendUsername).once('value', snapshot => {
       if (snapshot.exists()) {
         const friendUid = Object.keys(snapshot.val())[0];
-        // Add to current user's friends
+        // Add to current user's friends list
         db.ref('users/' + currentUserUid + '/friends/' + friendUid).set(true);
         loadFriends();
       } else {
@@ -223,11 +222,10 @@ body {
   function loadFriends() {
     db.ref('users/' + currentUserUid + '/friends').on('value', snapshot => {
       const friendsData = snapshot.val() || {};
-      // Get list of friend UIDs
       const friendUids = Object.keys(friendsData);
-      // Load each friend's username
       document.getElementById('friendsList').innerHTML = '';
       friendUids.forEach(uid => {
+        // Fetch each friend's username
         db.ref('users/' + uid).once('value').then(snap => {
           const userData = snap.val();
           const username = userData.username || userData.email;
@@ -239,7 +237,7 @@ body {
     });
   }
 
-  // Send message
+  // Send a message
   function sendMessage() {
     const msg = document.getElementById('messageInput').value.trim();
     if (!msg || !currentUser) return;
@@ -252,10 +250,10 @@ body {
     document.getElementById('messageInput').value = '';
   }
 
-  // Load messages
+  // Load chat messages
   function loadMessages() {
     const messagesRef = db.ref('messages');
-    messagesRef.off(); // clear previous listeners
+    messagesRef.off(); // Remove previous listeners
     messagesRef.on('child_added', snapshot => {
       const msg = snapshot.val();
       displayMessage(msg);
@@ -275,7 +273,7 @@ body {
     });
   }
 
-  // Firebase auth state listener
+  // Firebase auth state check
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
