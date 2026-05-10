@@ -1,288 +1,86 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Football Chat with Sign Up / Log In</title>
-<!-- Firebase SDKs -->
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-database-compat.js"></script>
-
-<style>
-body {
-  background-color: #2e2e2e;
-  font-family: 'Arial', sans-serif;
-  color: #fff;
-  background-image: url('https://images.unsplash.com/photo-1506744038136-46273834b3fb?ixlib=rb-4.0.3&auto=format&fit=crop&w=1950&q=80');
-  background-size: cover;
-  background-repeat: no-repeat;
-  background-attachment: fixed;
-  margin: 0;
-  padding: 0;
-}
-.header {
-  text-align: center;
-  padding: 20px;
-  background-color: rgba(0,0,0,0.5);
-  font-size: 2em;
-  color: #ffcc00;
-  font-family: 'Impact', sans-serif;
-}
-/* Sign up/login UI */
-#authDiv {
-  max-width: 600px;
-  margin: 10px auto;
-  padding: 15px;
-  background-color: rgba(0,0,0,0.6);
-  border-radius: 10px;
-  text-align: center;
-}
-#authDiv input {
-  margin: 5px;
-  padding: 8px;
-  width: calc(50% - 20px);
-}
-#authButtons button {
-  margin: 5px;
-  padding: 8px 12px;
-}
-#status {
-  margin-top: 10px;
-  font-weight: bold;
-}
-#chatDiv {
-  display: none; /* Hidden until logged in */
-}
-#friendsList {
-  list-style: none;
-  padding: 0;
-  max-height: 150px;
-  overflow-y: auto;
-  margin-top: 10px;
-}
-#friendsList li {
-  padding: 5px;
-  border-bottom: 1px solid #ffcc00;
-}
-#messages {
-  border: 1px solid #ccc;
-  height: 300px;
-  overflow-y: auto;
-  margin-top: 10px;
-  padding: 10px;
-}
-#messageInput {
-  width: calc(100% - 100px);
-  padding: 8px;
-}
-</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chat App with Login</title>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.17.1/firebase-auth.js"></script>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 40px;
+    }
+    input {
+      display: block;
+      margin: 10px 0;
+      padding: 8px;
+      width: 250px;
+    }
+    button {
+      padding: 8px 16px;
+      margin-top: 10px;
+    }
+    h2 {
+      margin-top: 40px;
+    }
+  </style>
 </head>
 <body>
-
-<div class="header">🏈 Welcome to the Chat! 🏈</div>
-
-<!-- Sign Up / Log In -->
-<div id="authDiv">
-  <h3>Sign Up / Log In</h3>
-  <p><em>You can create a new account or log into an existing one.</em></p>
-  <p>For new users: Enter email, password, and choose a username to sign up.</p>
-  <p>For returning users: Enter your email and password to log in.</p>
-  <input type="email" id="email" placeholder="Email" />
-  <input type="password" id="password" placeholder="Password" />
-  <br />
-  <input type="text" id="username" placeholder="Choose a username (for sign up only)" />
-  <br />
+  <h1>Chat App Login & Registration</h1>
+  
+  <h2>Register</h2>
+  <input type="email" id="registerEmail" placeholder="Email" />
+  <input type="password" id="registerPassword" placeholder="Password" />
   <button onclick="signUp()">Sign Up</button>
-  <button onclick="signIn()">Log In</button>
-  <div id="status"></div>
-</div>
-
-<!-- Main Chat UI -->
-<div id="chatDiv">
-  <h3>Hello, <span id="userDisplay"></span></h3>
-  <div>
-    <h4>Add Friend by Username</h4>
-    <input type="text" id="friendUsername" placeholder="Friend's username" />
-    <button onclick="addFriend()">Add Friend</button>
-  </div>
-  <h4>Your Friends:</h4>
-  <ul id="friendsList"></ul>
   
-  <h4>Chat Messages:</h4>
-  <div id="messages"></div>
+  <h2>Login</h2>
+  <input type="email" id="loginEmail" placeholder="Email" />
+  <input type="password" id="loginPassword" placeholder="Password" />
+  <button onclick="login()">Login</button>
   
-  <div>
-    <input type="text" id="messageInput" placeholder="Type a message" />
-    <button onclick="sendMessage()">Send</button>
-  </div>
-</div>
+  <script>
+    // Your Firebase configuration (replace with your actual config)
+    const firebaseConfig = {
+      apiKey: "YOUR_API_KEY",
+      authDomain: "YOUR_AUTH_DOMAIN",
+      projectId: "YOUR_PROJECT_ID",
+      // add other config parameters if needed
+    };
 
-<script>
-  // Replace with your Firebase project config
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "YOUR_DATABASE_URL",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
+    // Initialize Firebase
+    const app = firebase.initializeApp(firebaseConfig);
+    const auth = firebase.auth();
 
-  firebase.initializeApp(firebaseConfig);
-  const auth = firebase.auth();
-  const db = firebase.database();
+    // Sign up function
+    function signUp() {
+      const email = document.getElementById("registerEmail").value;
+      const password = document.getElementById("registerPassword").value;
 
-  let currentUser = null;
-  let currentUserUid = null;
-
-  // Sign Up for a new account
-  function signUp() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    const username = document.getElementById('username').value.trim();
-    if (!email || !password || !username) {
-      alert("Please fill all fields for sign up");
-      return;
-    }
-    auth.createUserWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        currentUser = userCredential.user;
-        currentUserUid = currentUser.uid;
-        // Save user info in database
-        db.ref('users/' + currentUserUid).set({
-          email: email,
-          username: username,
-          friends: {}
+      auth.createUserWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          alert("Account created successfully!");
+        })
+        .catch((error) => {
+          alert("Error: " + error.message);
         });
-        showChat();
-      })
-      .catch(error => {
-        document.getElementById('status').textContent = error.message;
-      });
-  }
-
-  // Log In for an existing account
-  function signIn() {
-    const email = document.getElementById('email').value.trim();
-    const password = document.getElementById('password').value.trim();
-    if (!email || !password) {
-      alert("Enter your email and password");
-      return;
     }
-    auth.signInWithEmailAndPassword(email, password)
-      .then(userCredential => {
-        currentUser = userCredential.user;
-        currentUserUid = currentUser.uid;
-        loadUserProfile();
-        showChat();
-      })
-      .catch(error => {
-        document.getElementById('status').textContent = error.message;
-      });
-  }
 
-  // Load user profile info after login
-  function loadUserProfile() {
-    db.ref('users/' + currentUserUid).once('value').then(snapshot => {
-      const data = snapshot.val();
-      if (data) {
-        document.getElementById('userDisplay').textContent = data.username || data.email;
-        loadFriends();
-        loadMessages();
-      }
-    });
-  }
+    // Login function
+    function login() {
+      const email = document.getElementById("loginEmail").value;
+      const password = document.getElementById("loginPassword").value;
 
-  // Show chat UI
-  function showChat() {
-    document.getElementById('authDiv').style.display = 'none';
-    document.getElementById('chatDiv').style.display = 'block';
-  }
-
-  // Add a friend by username
-  function addFriend() {
-    const friendUsername = document.getElementById('friendUsername').value.trim();
-    if (!friendUsername) return;
-    // Search for user with that username
-    db.ref('users').orderByChild('username').equalTo(friendUsername).once('value', snapshot => {
-      if (snapshot.exists()) {
-        const friendUid = Object.keys(snapshot.val())[0];
-        // Add to current user's friends list
-        db.ref('users/' + currentUserUid + '/friends/' + friendUid).set(true);
-        loadFriends();
-      } else {
-        alert('Username not found');
-      }
-    });
-  }
-
-  // Load friends list
-  function loadFriends() {
-    db.ref('users/' + currentUserUid + '/friends').on('value', snapshot => {
-      const friendsData = snapshot.val() || {};
-      const friendUids = Object.keys(friendsData);
-      document.getElementById('friendsList').innerHTML = '';
-      friendUids.forEach(uid => {
-        // Fetch each friend's username
-        db.ref('users/' + uid).once('value').then(snap => {
-          const userData = snap.val();
-          const username = userData.username || userData.email;
-          const li = document.createElement('li');
-          li.textContent = username;
-          document.getElementById('friendsList').appendChild(li);
+      auth.signInWithEmailAndPassword(email, password)
+        .then((userCredential) => {
+          alert("Logged in successfully!");
+          // You can redirect or show chat interface here
+        })
+        .catch((error) => {
+          alert("Error: " + error.message);
         });
-      });
-    });
-  }
-
-  // Send a message
-  function sendMessage() {
-    const msg = document.getElementById('messageInput').value.trim();
-    if (!msg || !currentUser) return;
-    db.ref('messages').push({
-      senderUid: currentUser.uid,
-      senderEmail: currentUser.email,
-      message: msg,
-      timestamp: Date.now()
-    });
-    document.getElementById('messageInput').value = '';
-  }
-
-  // Load chat messages
-  function loadMessages() {
-    const messagesRef = db.ref('messages');
-    messagesRef.off(); // Remove previous listeners
-    messagesRef.on('child_added', snapshot => {
-      const msg = snapshot.val();
-      displayMessage(msg);
-    });
-  }
-
-  function displayMessage(msg) {
-    const div = document.getElementById('messages');
-    const senderRef = db.ref('users/' + msg.senderUid);
-    senderRef.once('value').then(snap => {
-      const senderData = snap.val();
-      const senderName = senderData?.username || senderData?.email || 'Unknown';
-      const msgDiv = document.createElement('div');
-      msgDiv.innerHTML = `<strong>${senderName}:</strong> ${msg.message}`;
-      div.appendChild(msgDiv);
-      div.scrollTop = div.scrollHeight;
-    });
-  }
-
-  // Firebase auth state check
-  auth.onAuthStateChanged(user => {
-    if (user) {
-      currentUser = user;
-      currentUserUid = user.uid;
-      loadUserProfile();
-      showChat();
     }
-  });
-</script>
-
+  </script>
 </body>
 </html>
