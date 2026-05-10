@@ -1,28 +1,83 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>Chat Room</title>
-  <style>
-    body { font-family: Arial; background: #f4f4f4; }
-    #chat { max-width: 600px; margin: 40px auto; background: #fff; border-radius: 8px; padding: 20px; }
-    #messages { list-style: none; padding: 0; max-height: 300px; overflow-y: auto; }
-    #messages li { padding: 8px; margin: 5px 0; border-bottom: 1px solid #eee; }
-    form { display: flex; margin-top: 10px; }
-    input { flex: 1; padding: 10px; border: 1px solid #ccc; border-radius: 4px; }
-    button { padding: 10px 20px; border: none; background-color: #007BFF; color: #fff; border-radius: 4px; margin-left: 5px; }
-  </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Friend List App</title>
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+  }
+  input[type="text"] {
+    padding: 8px;
+    margin-right: 10px;
+  }
+  button {
+    padding: 8px 12px;
+  }
+  ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  li {
+    padding: 4px 0;
+  }
+</style>
 </head>
 <body>
-  <div id="chat">
-    <h2>💬 Chat Room</h2>
-    <ul id="messages"></ul>
-    <form id="form">
-      <input id="input" autocomplete="off" placeholder="Type your message..." />
-      <button>Send</button>
-    </form>
-  </div>
-  <script src="/socket.io/socket.io.js"></script>
-  <script src="script.js"></script>
+<h2>Friend List App</h2>
+<div>
+  <label for="name">Enter your name:</label>
+  <input type="text" id="name" placeholder="Your Name" />
+</div>
+<div>
+  <label for="friend">Add a friend:</label>
+  <input type="text" id="friend" placeholder="Friend's Name" />
+  <button onclick="addFriend()">Add Friend</button>
+</div>
+
+<h3>Hello, <span id="userName"></span>!</h3>
+<h4>Your Friends:</h4>
+<ul id="friendList"></ul>
+
+<script>
+  const userNameSpan = document.getElementById('userName');
+  const nameInput = document.getElementById('name');
+  const friendInput = document.getElementById('friend');
+  const friendListUl = document.getElementById('friendList');
+
+  let userName = '';
+
+  // Save name to local storage and display
+  nameInput.addEventListener('change', () => {
+    userName = nameInput.value.trim();
+    userNameSpan.textContent = userName;
+    localStorage.setItem('userName', userName);
+  });
+
+  // Load name from local storage if available
+  window.onload = () => {
+    const savedName = localStorage.getItem('userName');
+    if (savedName) {
+      userName = savedName;
+      nameInput.value = userName;
+      userNameSpan.textContent = userName;
+    }
+  };
+
+  // Function to add friend
+  function addFriend() {
+    const friendName = friendInput.value.trim();
+    if (friendName) {
+      const li = document.createElement('li');
+      li.textContent = friendName;
+      friendListUl.appendChild(li);
+      friendInput.value = '';
+    } else {
+      alert('Please enter a friend\'s name.');
+    }
+  }
+</script>
 </body>
 </html>
