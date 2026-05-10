@@ -85,13 +85,16 @@ body {
 <!-- Sign Up / Login -->
 <div id="authDiv">
   <h3>Sign Up / Login</h3>
+  <p><em>You can create a new account or log into an existing one.</em></p>
+  <p>For new users: Enter email, password, and choose a username to sign up.</p>
+  <p>For returning users: Enter your email and password to log in.</p>
   <input type="email" id="email" placeholder="Email" />
   <input type="password" id="password" placeholder="Password" />
   <br />
-  <input type="text" id="username" placeholder="Choose a username" />
+  <input type="text" id="username" placeholder="Choose a username (for sign up only)" />
   <br />
   <button onclick="signUp()">Sign Up</button>
-  <button onclick="signIn()">Sign In</button>
+  <button onclick="signIn()">Log In</button>
   <div id="status"></div>
 </div>
 
@@ -160,7 +163,7 @@ body {
       });
   }
 
-  // Sign In
+  // Log in with existing account
   function signIn() {
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value.trim();
@@ -272,7 +275,7 @@ body {
     });
   }
 
-  // Firebase auth state observer
+  // Firebase auth state listener
   auth.onAuthStateChanged(user => {
     if (user) {
       currentUser = user;
