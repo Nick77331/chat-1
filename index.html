@@ -3,34 +3,110 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>Friend List App</title>
+<title>Neon Friend Chat App</title>
 <style>
   body {
-    font-family: Arial, sans-serif;
+    font-family: 'Arial', sans-serif;
+    background-color: #000;
+    color: #0ff;
     margin: 20px;
   }
+
+  h2, h3, h4 {
+    text-shadow: 0 0 10px #0ff, 0 0 20px #0ff;
+  }
+
   input[type="text"] {
     padding: 8px;
     margin-right: 10px;
+    border: 2px solid #0ff;
+    border-radius: 4px;
+    background-color: #000;
+    color: #0ff;
+    outline: none;
   }
+
   button {
     padding: 8px 12px;
+    border: 2px solid #0ff;
+    border-radius: 4px;
+    background-color: #000;
+    color: #0ff;
+    cursor: pointer;
   }
-  ul {
-    list-style-type: none;
+
+  button:hover {
+    background-color: #0ff;
+    color: #000;
+  }
+
+  #friendList {
+    list-style: none;
     padding: 0;
   }
-  li {
-    padding: 4px 0;
+
+  #friendList li {
+    padding: 4px 8px;
+    margin: 4px 0;
+    border: 1px solid #0ff;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  #friendList li:hover {
+    background-color: #0ff;
+    color: #000;
+  }
+
+  #chatContainer {
+    margin-top: 20px;
+    border: 2px solid #0ff;
+    border-radius: 8px;
+    padding: 10px;
+    max-width: 600px;
+    height: 300px;
+    overflow-y: auto;
+    background-color: #000;
+  }
+
+  #messages {
+    display: flex;
+    flex-direction: column;
+  }
+
+  #messages div {
+    margin: 4px 0;
+    padding: 8px;
+    border-radius: 4px;
+    background-color: #111;
+    border: 1px solid #0ff;
+  }
+
+  #sendMessage {
+    margin-top: 10px;
+    display: flex;
+  }
+
+  #messageInput {
+    flex: 1;
+    padding: 8px;
+    border: 2px solid #0ff;
+    border-radius: 4px;
+    background-color: #000;
+    color: #0ff;
+    outline: none;
   }
 </style>
 </head>
 <body>
-<h2>Friend List App</h2>
+<h2>Neon Friend Chat App</h2>
+
 <div>
   <label for="name">Enter your name:</label>
   <input type="text" id="name" placeholder="Your Name" />
 </div>
+
 <div>
   <label for="friend">Add a friend:</label>
   <input type="text" id="friend" placeholder="Friend's Name" />
@@ -41,20 +117,31 @@
 <h4>Your Friends:</h4>
 <ul id="friendList"></ul>
 
+<h4>Select a friend to chat:</h4>
+<div id="chatSection" style="display:none;">
+  <h4>Chat with <span id="currentFriend"></span></h4>
+  <div id="chatContainer">
+    <div id="messages"></div>
+  </div>
+  <div id="sendMessage">
+    <input type="text" id="messageInput" placeholder="Type a message" />
+    <button onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
 <script>
   const userNameSpan = document.getElementById('userName');
   const nameInput = document.getElementById('name');
   const friendInput = document.getElementById('friend');
   const friendListUl = document.getElementById('friendList');
+  const currentFriendSpan = document.getElementById('currentFriend');
+  const chatSection = document.getElementById('chatSection');
+  const messagesDiv = document.getElementById('messages');
+  const messageInput = document.getElementById('messageInput');
 
   let userName = '';
-
-  // Save name to local storage and display
-  nameInput.addEventListener('change', () => {
-    userName = nameInput.value.trim();
-    userNameSpan.textContent = userName;
-    localStorage.setItem('userName', userName);
-  });
+  let friends = [];
+  let currentFriend = '';
 
   // Load name from local storage if available
   window.onload = () => {
@@ -64,18 +151,71 @@
       nameInput.value = userName;
       userNameSpan.textContent = userName;
     }
+    loadFriends();
   };
 
-  // Function to add friend
+  // Save name
+  nameInput.addEventListener('change', () => {
+    userName = nameInput.value.trim();
+    userNameSpan.textContent = userName;
+    localStorage.setItem('userName', userName);
+  });
+
+  // Load friends from local storage
+  function loadFriends() {
+    const storedFriends = JSON.parse(localStorage.getItem('friends')) || [];
+    friends = storedFriends;
+    renderFriends();
+  }
+
+  function saveFriends() {
+    localStorage.setItem('friends', JSON.stringify(friends));
+  }
+
+  function renderFriends() {
+    friendListUl.innerHTML = '';
+    friends.forEach(friend => {
+      const li = document.createElement('li');
+      li.textContent = friend;
+      li.onclick = () => selectFriend(friend);
+      friendListUl.appendChild(li);
+    });
+  }
+
   function addFriend() {
     const friendName = friendInput.value.trim();
-    if (friendName) {
-      const li = document.createElement('li');
-      li.textContent = friendName;
-      friendListUl.appendChild(li);
+    if (friendName && !friends.includes(friendName)) {
+      friends.push(friendName);
+      saveFriends();
+      renderFriends();
       friendInput.value = '';
+    } else if (friends.includes(friendName)) {
+      alert('This friend is already added.');
     } else {
       alert('Please enter a friend\'s name.');
+    }
+  }
+
+  function selectFriend(friend) {
+    currentFriend = friend;
+    document.getElementById('currentFriend').textContent = friend;
+    chatSection.style.display = 'block';
+    messagesDiv.innerHTML = '';
+  }
+
+  function sendMessage() {
+    const msg = messageInput.value.trim();
+    if (msg && currentFriend) {
+      const msgDiv = document.createElement('div');
+      msgDiv.innerHTML = `<strong>${userName}:</strong> ${msg}`;
+      messagesDiv.appendChild(msgDiv);
+      messageInput.value = '';
+      // For demo: auto-reply from friend
+      setTimeout(() => {
+        const replyDiv = document.createElement('div');
+        replyDiv.innerHTML = `<strong>${currentFriend}:</strong> Got your message!`;
+        messagesDiv.appendChild(replyDiv);
+      }, 1000);
     }
   }
 </script>
